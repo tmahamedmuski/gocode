@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-api-deployment
+  labels:
+    app: book-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: book-api
+  template:
+    metadata:
+      labels:
+        app: book-api
+    spec:
+      containers:
+      - name: book-api
+        image: book-api:latest
+        imagePullPolicy: Never # for local minikube/kind testing
+        ports:
+        - containerPort: 8080
