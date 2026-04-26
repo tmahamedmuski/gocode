@@ -2,11 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
-	"math"
 
 	"book-api/model"
 	"book-api/storage"
@@ -34,7 +34,7 @@ func WriteError(w http.ResponseWriter, status int, message string) {
 	WriteJSON(w, status, map[string]string{"error": message})
 }
 
-// CreateBook POST /books
+// CreateBook new ones (POST /books)
 func (h *BookHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
 	var book model.Book
 	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
@@ -132,8 +132,6 @@ func (h *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Decode JSON directly over the existing book. 
-	// This performs a partial update: missing fields in JSON won't overwrite existing data!
 	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
 		WriteError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -188,7 +186,7 @@ func (h *BookHandler) SearchBooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyword := strings.ToLower(query)
-	
+
 	// Optimization Approach: Split into Goroutines
 	numWorkers := 4
 	booksPerWorker := int(math.Ceil(float64(len(allBooks)) / float64(numWorkers)))

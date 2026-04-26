@@ -1,79 +1,175 @@
-# Book API - Go Assignment
+# Book API (Go)
 
-This project is a REST API written in Go for managing a collection of Books. It addresses all the core requirements as well as the bonus points (Pagination, Docker, Kubernetes, Unit Testing).
+A high-performance REST API built with Go for managing a collection of books.
+This project supports CRUD operations, pagination, concurrent search, file-based storage, and containerized deployment.
 
-## Features & Optimizations
 
-### 1. Robust File-Based Storage & Indexing Mechanism
-The storage layer (`storage/file_storage.go`) uses `data.json` as the persistent backend, but **optimizes reads and writes** by implementing a thread-safe in-memory mapping:
-- Lookups (`GET /books/{id}`) are **O(1)** due to map lookup.
-- Fast, ordered lookups (`GET /books?limit=X&offset=Y`) are maintained using an ordered slice of IDs, efficiently supporting pagination.
-- Durability is guaranteed by a `sync.RWMutex`. The JSON file is re-written on mutation (`POST`, `PUT`, `DELETE`).
+### Core Features
 
-### 2. Search Optimization (Concurrency)
-The `/books/search?q=<keyword>` endpoint executes highly-optimized queries using Goroutines and Channels:
-- The entire dataset is split evenly among several **goroutines** (workers).
-- Case-insensitive substring matching is performed in parallel for `title` and `description`.
-- A `sync.WaitGroup` ensures all chunks are matched, and a channel gathers local partial matches into a unified matching response list.
+* Create, Read, Update, Delete (CRUD) books
+* RESTful API using Go’s native `net/http`
+* JSON request/response handling
 
-### 3. Native Routing
-Implemented using Go 1.22's newly enhanced standard library `http.ServeMux` enabling parameterized endpoints like `GET /books/{id}` natively, without third party routers.
+### Performance Optimizations
 
-## Running Locally
+* **O(1) lookups** using in-memory map
+* Ordered slice for efficient pagination
+* Thread-safe operations with `sync.RWMutex`
 
-Requirements: Go 1.22+
+### Concurrent Search
 
-1. Start the server (will automatically create `data.json`):
-   ```bash
-   go run main.go
-   ```
-2. The server will start on port `8080`.
+* Search endpoint uses **goroutines**
+* Dataset split into chunks for parallel processing
+* Case-insensitive matching on title and description
+* Results combined using channels and `sync.WaitGroup`
 
-**Example Endpoints:**
-- `GET http://localhost:8080/books`
-- `GET http://localhost:8080/books?offset=0&limit=5`
-- `POST http://localhost:8080/books`
-- `GET http://localhost:8080/books/search?q=novel`
+### Storage(not recomanded for production)
 
-## Testing
+* File-based persistence using `data.json`
+* Auto-created file if not present
+* Data written on every mutation
 
-A suite of unit tests has been implemented to test Handler integrations and concurrency mapping using `net/http/httptest`.
+### Pagination
 
-```bash
+* Supports `offset` and `limit` parameters
+
+### Testing
+
+* Unit tests using `net/http/httptest`
+
+### Deployment Ready
+
+* Docker support
+* Kubernetes manifests included
+
+
+
+## Tech Stack
+
+* **Language:** Go 1.22
+* **Routing:** `http.ServeMux` (native Go router)
+* **Storage:** JSON file
+* **Concurrency:** Goroutines, Channels
+* **Containerization:** Docker
+* **Orchestration:** Kubernetes
+
+
+
+## Project Structure
+book-api/
+├── main.go             
+├── model/
+│   └── book.go         
+├── storage/
+│   └── file_storage.go 
+├── handler/
+│   └── book_handler.go 
+├── k8s/
+│   ├── deployment.yaml
+│   └── service.yaml
+├── Dockerfile
+├── data.json
+└── README.md
+
+## API Endpoints
+
+| Method | Endpoint           | Description                      |
+| ------ | ------------------ | -------------------------------- |
+| POST   | `/books`           | Create a new book                |
+| GET    | `/books`           | List all books (with pagination) |
+| GET    | `/books/{id}`      | Get book by ID                   |
+| PUT    | `/books/{id}`      | Update book                      |
+| DELETE | `/books/{id}`      | Delete book                      |
+| GET    | `/books/search?q=` | Search books                     |
+
+
+
+##  Running the Application
+
+Start the server:
+go run main.go
+
+Server runs on:
+http://localhost:8080
+
+
+### Create a Book
+
+bash
+curl -X POST http://localhost:8080/books \
+-H "Content-Type: application/json" \
+-d '{"bookId":"1","title":"Go Programming","authorId":"A1","pages":250,"price":29.99}'
+
+
+### Get Books (Pagination)
+
+
+curl "http://localhost:8080/books?offset=0&limit=5"
+
+
+### Search Books
+
+
+curl "http://localhost:8080/books/search?q=go"
+
+
+### Update Book
+
+
+curl -X PUT http://localhost:8080/books/1 \
+-H "Content-Type: application/json" \
+-d '{"title":"Advanced Go","pages":300}'
+
+
+### Delete Book
+
+
+curl -X DELETE http://localhost:8080/books/1
+
+
+##  Running Tests
+
+
 go test ./... -v
-```
 
-## Docker Containerization
 
-To run this application as a container:
 
-```bash
-docker build -t book-api:latest .
-docker run -p 8080:8080 book-api:latest
-```
 
-## Kubernetes Deployment (Local with Minikube / Kind)
+## Docker
 
-Manifests are located in the `k8s/` directory. By default, it looks for the image `book-api:latest` locally with `imagePullPolicy: Never`.
+Build the image:
 
-1. Ensure Minikube is started:
-   ```bash
-   minikube start
-   ```
+docker build -t book-api .
 
-2. Point your Docker CLI to Minikube's Docker daemon, then build the image so K8s can see it:
-   ```bash
-   eval $(minikube docker-env)
-   docker build -t book-api:latest .
-   ```
 
-3. Apply the manifests:
-   ```bash
-   kubectl apply -f k8s/deployment.yaml
-   kubectl apply -f k8s/service.yaml
-   ```
+Run the container:
 
-4. Expose the service locally (Minikube):
-   ```bash
-   minikube service book-api-service
-   ```
+
+docker run -p 8080:8080 book-api
+
+
+##  Kubernetes
+
+Apply deployment and service:
+
+
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+
+Access the service using your cluster tools 
+
+
+
+## Highlights
+
+* Clean architecture (Handler → Storage → Model)
+* Native Go routing (no external frameworks)
+* Efficient concurrent search implementation
+* Production-ready with Docker & Kubernetes
+
+
+
+## Conclusion
+
+This project demonstrates how to build a scalable and efficient REST API in Go using built-in libraries, concurrency, and modern deployment practices.

@@ -27,7 +27,7 @@ type FileStorage struct {
 	mu       sync.RWMutex
 	filename string
 	books    map[string]model.Book
-	ordered  []string // keeps track of ordering for consistent pagination
+	ordered  []string
 }
 
 func NewFileStorage(filename string) (*FileStorage, error) {
@@ -85,7 +85,7 @@ func (fs *FileStorage) GetAll(offset, limit int) ([]model.Book, int, error) {
 
 	end := offset + limit
 	if end > total || limit == 0 {
-		end = total // return all if limit is 0
+		end = total // return --> 0
 	}
 
 	var result []model.Book
@@ -127,7 +127,7 @@ func (fs *FileStorage) Update(id string, book model.Book) error {
 	if _, exists := fs.books[id]; !exists {
 		return ErrBookNotFound
 	}
-	
+
 	// Enforce ID matches
 	book.BookID = id
 	fs.books[id] = book
