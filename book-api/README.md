@@ -172,4 +172,4 @@ Access the service using your cluster tools
 
 ## Conclusion
 
-This project demonstrates how to build a scalable and efficient REST API in Go using built-in libraries, concurrency, and modern deployment practices.
+This project was developed through my own hands-on coding and learning process using Go. While building the system, I encountered various errors and challenges, where I used ChatGPT as a guidance tool to debug issues and clarify concepts. The complete implementation was not directly generated, but rather designed, coded, and refined by me. This experience significantly improved my understanding of REST API development, concurrency, and practical backend engineering.
